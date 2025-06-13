@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   mariadb:
@@ -40,10 +40,6 @@ services:
     networks:
       - inception_network
 
-networks:
-  inception_network:
-    driver: bridge
-
 volumes:
   mariadb_data:
     driver: local
@@ -52,15 +48,13 @@ volumes:
       o: bind
       device: /home/arissane/data/mariadb
 
-  wordpress_files:
+  wordpress_data:  # Fixed name
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /home/arissane/data/wordpress
 
-secrets:
-  db_root_password:
-    file: ../secrets/db_root_password.txt
-  db_password:
-    file: ../secrets/db_password.txt
+networks:
+  inception_network:
+    driver: bridge
