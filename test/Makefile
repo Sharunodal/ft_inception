@@ -11,12 +11,15 @@
 # **************************************************************************** #
 
 NAME = inception
-COMPOSE = docker-compose -f srcs/docker-compose.yml
+COMPOSE = docker compose -f srcs/docker-compose.yml
 ENV = srcs/.env
 
 all: up
 
-up:
+check-docker:
+	@docker info > /dev/null 2>&1 || (echo "Docker is not running!" && exit 1)
+
+up:	check-docker
 	@echo "Starting $(NAME)..."
 	$(COMPOSE) --env-file $(ENV) up -d --build
 
@@ -34,9 +37,10 @@ clean:
 	$(COMPOSE) down
 
 fclean: clean
+	@echo "Removing volumes, images, and unused data..."
 	$(COMPOSE) down -v --rmi all --remove-orphans
 	docker system prune -f
 
 re: fclean all
 
-.PHONY: all up down restart build clean fclean re
+.PHONY: all up down restart build clean fclean re check-docker

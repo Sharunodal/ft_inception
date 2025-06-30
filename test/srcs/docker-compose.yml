@@ -7,6 +7,9 @@ services:
     restart: always
     env_file:
       - .env
+    secrets:
+      - db_password
+      - db_root_password
     volumes:
       - mariadb_data:/var/lib/mysql
     networks:
@@ -18,6 +21,9 @@ services:
     restart: always
     env_file:
       - .env
+    secrets:
+      - wp_admin_password
+      - wp_user_password
     volumes:
       - wordpress_data:/var/www/html
     depends_on:
@@ -48,12 +54,22 @@ volumes:
       o: bind
       device: /home/arissane/data/mariadb
 
-  wordpress_data:  # Fixed name
+  wordpress_data:
     driver: local
     driver_opts:
       type: none
       o: bind
       device: /home/arissane/data/wordpress
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  db_root_password:
+    file: ../secrets/db_root_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
+  wp_user_password:
+    file: ../secrets/wp_user_password.txt
 
 networks:
   inception_network:
