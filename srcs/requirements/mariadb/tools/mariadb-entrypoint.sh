@@ -1,21 +1,25 @@
 #!/bin/sh
 set -e
 
-# ENV vars provided via .env or secrets
-: "${MYSQL_DATABASE:?}"
-: "${MYSQL_USER:?}"
-: "${MYSQL_PASSWORD:?}"
-: "${MYSQL_ROOT_PASSWORD:?}"
+# Load from secrets if present
+[ -f /run/secrets/db_password ] && export MYSQL_PASSWORD=$(cat /run/secrets/db_password)
+[ -f /run/secrets/db_root_password ] && export MYSQL_ROOT_PASSWORD=$(cat /run/secrets/db_root_password)
 
-# Setup once per volume
+# Check required variables
+: "${MYSQL_DATABASE:?Missing MYSQL_DATABASE}"
+: "${MYSQL_USER:?Missing MYSQL_USER}"
+: "${MYSQL_PASSWORD:?Missing MYSQL_PASSWORD}"
+: "${MYSQL_ROOT_PASSWORD:?Missing MYSQL_ROOT_PASSWORD}"
+
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB..."
     mariadb-install-db --user=mysql --datadir=/var/lib/mysql > /dev/null
 
+    echo "Starting MariaDB for setup..."
     mysqld_safe --skip-networking &
-    pid="$!"
+    pid=$!
 
-    echo "Waiting for MariaDB to start..."
+    echo "Waiting for MariaDB to be responsive..."
     until mysqladmin ping --silent; do
         sleep 1
     done
@@ -29,10 +33,13 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         FLUSH PRIVILEGES;
 EOSQL
 
-    echo "Shutting down setup MariaDB instance..."
     mysqladmin shutdown
-    wait "$pid"
+    wait $pid
 fi
+
+# Allow connections from Docker network
+echo "[mysqld]" > /etc/mysql/my.cnf
+echo "bind-address = 0.0.0.0" >> /etc/mysql/my.cnf
 
 echo "Starting MariaDB in safe mode..."
 exec mysqld_safe
