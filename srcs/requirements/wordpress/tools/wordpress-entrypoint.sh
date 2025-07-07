@@ -2,6 +2,10 @@
 set -xe
 cd /var/www/html
 
+# Load from secrets if present
+[ -f /run/secrets/wp_admin_password ] && export WORDPRESS_ADMIN_PASSWORD=$(cat /run/secrets/wp_admin_password)
+[ -f /run/secrets/wp_user_password ] && export WORDPRESS_USER_PASSWORD=$(cat /run/secrets/wp_user_password)
+
 # PHP-FPM config
 if [ ! -f /etc/.firstrun ]; then
     echo "Configuring PHP-FPM..."
