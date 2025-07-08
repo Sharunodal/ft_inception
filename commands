@@ -1,0 +1,4 @@
+openssl s_client -connect arissane.42.fr:443 < /dev/null | grep "Protocol"
+
+docker ps
+docker logs wordpress
